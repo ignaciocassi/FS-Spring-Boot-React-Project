@@ -1,15 +1,17 @@
 import './App.css';
 import React, {Component} from 'react';
 import {getAllStudents} from "./client";
-import {Table, Avatar} from 'antd';
+import {Table, Avatar, Spin, Icon} from 'antd';
 import 'antd/dist/antd.css';
 import './index.css';
 import Container from './Container';
+import getSpin from "./Spin";
 
 class App extends Component {
 
     state = {
-        students: []
+        students: [],
+        isFetching: false
     }
 
     componentDidMount() {
@@ -17,22 +19,30 @@ class App extends Component {
     }
 
     fetchStudents = () => {
+        this.setState({isFetching: true});
         getAllStudents()
             .then(res => res.json()
                 .then(students => {
                     this.setState({students});
+                    this.setState({isFetching: false})
                 })
             );
     }
 
     render() {
-        const {students} = this.state;
+        const {students, isFetching} = this.state;
+        if (isFetching) {
+            return getSpin()
+        }
         if (students && students.length) {
             const columns = [
                 {
                     title: '',
                     key: 'avatar',
-                    render: (text, student) => (<Avatar size='large'> {`${student.firstName.charAt(0).toUpperCase()}${student.lastName.charAt(0).toUpperCase()}`}</Avatar>)
+                    render: (text, student) => (
+                        <Avatar size='large' shape={'square'}>
+                            {`${student.firstName.charAt(0).toUpperCase()}${student.lastName.charAt(0).toUpperCase()}`}
+                        </Avatar>)
                 },
                 {
                     title: 'StudentId',
@@ -60,7 +70,9 @@ class App extends Component {
                     key: 'gender'
                 }
             ];
-            return <Container><Table dataSource={students} columns={columns} rowKey='studentId'
+            return <Container><Table dataSource={students}
+                                     columns={columns}
+                                     rowKey='studentId'
                                      pagination={false}/></Container>
         }
         return <h1>No students found</h1>
